@@ -8,7 +8,9 @@ use App\Models\Pembelian;
 use App\Models\PembelianItem;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Components\Grid;
 use Filament\Resources\Resource;
+use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -28,36 +30,55 @@ class PembelianItemResource extends Resource
         $pembelian = \App\Models\Pembelian::find(request('pembelian_id'));
         return $form
             ->schema([
+                Grid::make()
+                ->schema([
                 Forms\Components\DatePicker::make('tanggal')
-                ->label('Tanggal Pembelian')
-                ->required()
-                ->default($pembelian->tanggal)
-                ->disabled()
-                ->columnSpanFull(),
+                    ->label('Tanggal Pembelian')
+                    ->required()
+                    ->default($pembelian->tanggal)
+                    ->disabled(),
                 Forms\Components\TextInput::make('supplier_id')
-                ->label('supplier')
-                ->required()
-                ->disabled()
-                ->default($pembelian->supplier?->nama),
+                    ->label('supplier')
+                    ->required()
+                    ->disabled()
+                    ->default($pembelian->supplier?->nama),
                 Forms\Components\TextInput::make('supplier_id')
-                ->label('Email Supplier')
-                ->required()
-                ->disabled()
-                ->default($pembelian->supplier?->email),
+                    ->label('Email Supplier')
+                    ->required()
+                    ->disabled()
+                    ->default($pembelian->supplier?->email),
+                ])->columns(3),
+                Grid::make()
+                ->schema([
                 Forms\Components\Select::make('barang_id')
-                ->label('Barang')
-                ->required()
-                ->options(
-                    \App\Models\Barang::all()->pluck('nama','id')
-                )->reactive()
-                ->afterStateUpdated(function ($state, Set $set){
-                    $barang = \App\Models\Barang::find($state);
-                    $set('harga',$barang->harga);
-                }),
-                Forms\Components\TextInput::make('jumlah')
-                ->label('Jumlah Barang'),
+                    ->label('Barang')
+                    ->required()
+                    ->options(
+                        \App\Models\Barang::all()->pluck('nama','id')
+                    )->reactive()
+                    ->afterStateUpdated(function ($state, Set $set, Get $get){
+                        $barang = \App\Models\Barang::find($state);
+                        $set('harga',$barang->harga);
+                        $jumlah = $get('jumlah');
+                        $total = $jumlah * $barang->harga;
+                        $set('total', $total);
+                    }),
                 Forms\Components\TextInput::make('harga')
-                ->label('Harga Barang'),
+                    ->label('Harga Barang'),  
+                Forms\Components\TextInput::make('jumlah')
+                    ->reactive()
+                    ->afterStateUpdated(function($state, Set $set, Get $get){
+                        $jumlah = $state;
+                        $harga = $get('harga');
+                        $total = $jumlah * $harga;
+                        $set('total', $total); 
+                    })
+                    ->label('Jumlah Barang')->required()->default(1),
+                Forms\Components\TextInput::make('total')
+                    ->disabled()
+                    ->label('Total Harga'),
+                ])->columns(4),
+                
                 Forms\Components\Hidden::make('pembelian_id')
                 ->default(request('pembelian_id')),
             ]);

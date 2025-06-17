@@ -11,6 +11,7 @@ use Filament\Forms\Form;
 use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -53,7 +54,11 @@ class PembelianResource extends Resource
     {
         return $table
             ->columns([
-                //
+                TextColumn::make('supplier.nama_perusahaan')
+                    ->label('Nama Supplier'),
+                TextColumn::make('supplier.nama')
+                    ->label('Nama Pengghubung'),
+                TextColumn::make('tanggal')->dateTime('d F Y')->label('Tanggal Pembalian'),
             ])
             ->filters([
                 //
